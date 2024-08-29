@@ -1,3 +1,5 @@
 token.txt
 /servers
 /node_modules
+.env
+Deploy-commands.js
