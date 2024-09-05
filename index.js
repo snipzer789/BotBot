@@ -1,7 +1,12 @@
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
-const { Check_Server_exist, Load_server_settings, Log_message } = require('./message_logger/message_logger.js');
 const fs = require('node:fs');
 const path = require('node:path');
+
+// my functions import
+const { Check_Server_exist, Log_message } = require('./message_logger/message_logger.js');
+const { Create_Config } = require('./functions/Create_Config.js');
+const { Load_server_settings } = require('./functions/Misc.js');
+const { error } = require('node:console');
 
 const Discord_Token = process.env.Discord_Token;
 
@@ -66,39 +71,34 @@ Discord_Client.once(Events.ClientReady, (readyClient) => {
 
 Discord_Client.on(Events.GuildCreate, (GuildCreate) => {
 	Server_Dir = fs.readdirSync('./servers');
-	if (Check_Server_exist) {
+	if (Check_Server_exist()) {
 		return;
 	}
 	fs.mkdirSync(`./servers/${GuildCreate.id}`);
-	fs.writeFileSync(`./servers/${GuildCreate.id}/Config.yaml`, '{}');
+	Create_Config(GuildCreate.id);
 });
 
 Discord_Client.on(Events.MessageCreate, (message) => {
 	if (!Check_Server_exist(message.guildId)) {
 		return;
 	}
-    console.log('guild found');
-    
-    if (message.author.bot){
-        return;
-    }
-    console.log('author is not a bot')
 
-    let Server_config = Load_server_settings(message.guildId);
+	if (message.author.bot) {
+		return;
+	}
+
+	let Server_config = Load_server_settings(message.guildId);
 	if (!Server_config.Message_logger.Message_logger_enable) {
 		return;
 	}
-	console.log('Logger enabled');
-	
-    if (Server_config.Message_logger.Message_logger_id == '') {
+
+	if (Server_config.Message_logger.Message_logger_id == "") {
 		return;
 	}
-    console.log('Log channel found');
 	let Outgoing_message = Log_message(message, Server_config);
 
-    if (Outgoing_message != '') {
+	if (Outgoing_message != '') {
 		const Logs_channel = Discord_Client.channels.cache.get(Server_config.Message_logger.Message_logger_id);
-		console.log(Outgoing_message);
 		if (Outgoing_message.includes('SPOILER')) {
 			Logs_channel.send({
 				content: Outgoing_message,
@@ -112,4 +112,9 @@ Discord_Client.on(Events.MessageCreate, (message) => {
 		}
 		return;
 	}
+});
+
+process.on('unhandledRejection', (error) => {
+	console.error('Unhandled promise rejection:', error);
+	fs.writeFileSync('./error.txt', `${error}.txt`)
 });
