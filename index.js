@@ -95,7 +95,7 @@ Discord_Client.on(Events.MessageCreate, (message) => {
 	if (Server_config.Message_logger.Message_logger_id == "") {
 		return;
 	}
-	let Outgoing_message = Log_message(message, Server_config);
+	let Outgoing_message = Log_message(message, Server_config, message.guildId, message.channelId);
 
 	if (Outgoing_message != '') {
 		const Logs_channel = Discord_Client.channels.cache.get(Server_config.Message_logger.Message_logger_id);

@@ -10,11 +10,28 @@ const Check_Server_exist = (Server_id) => {
 	}
 };
 
-const Log_message = (Message, Server_config) => {
-	let parsed_message = Parse_discord_message(Message);
+/*
+0: Message.id
+1: Time_stamp_sec
+2: Parsed_content
+3: Message_attachment
+4: Message_reply
+5: Message.author.username
+6: Mentioned_users
+7: Mentioned_roles
+8: Message_length
+*/
 
-	let Message_Logged = parsed_message[2];
-	fs.writeFileSync(`./Logs.txt`, `${parsed_message}`);
+const Log_message = (Message, Server_config, Guild_Id, Channel_Id) => {
+	let Parsed_message = Parse_discord_message(Message);
+
+	let Message_Logged
+	let Filtered_message
+	// https://discord.com/channels/1048977410755940392/1278137332586909756/1281393672470138941
+	Message_Logged = `<t:${Parsed_message[1]}:T> In https://discord.com/channels/${Guild_Id}/${Channel_Id}/${Parsed_message[0]} | ${Filtered_message} | Reply to: ${Parsed_message[4]}`
+
+	console.log(Message_Logged)
+	fs.writeFileSync(`./Logs.txt`, `${Parsed_message}`);
 	return Message_Logged;
 };
 
@@ -78,9 +95,10 @@ const Parse_discord_message = (Message) => {
 		Message_reply = '';
 	}
 
+	let Time_stamp_sec = Math.floor(Message.createdTimestamp/1000)
 	let Parsed_discord_message = [];
 	Parsed_discord_message.push(Message.id);
-	Parsed_discord_message.push(Message.createdTimestamp);
+	Parsed_discord_message.push(Time_stamp_sec);
 	Parsed_discord_message.push(Parsed_content);
 	Parsed_discord_message.push(Message_attachment);
 	Parsed_discord_message.push(Message_reply);
